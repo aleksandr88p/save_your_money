@@ -1,0 +1,71 @@
+{
+    "12345": [
+        {
+            "timestamp": "2024-08-27T18:16:48.672366",
+            "data": {
+                "meat": {},
+                "beverage": {},
+                "dairy_product": {},
+                "dessert": {},
+                "fruit_and_vegi": {},
+                "hygiene": {},
+                "household_chem": {},
+                "gift": {},
+                "fish_product": {},
+                "other": {},
+                "total_price": "None"
+            }
+        },
+        {
+            "timestamp": "2024-08-27T18:25:22.750053",
+            "data": {
+                "meat": [
+                    {
+                        "name": "фарш",
+                        "quantity": "1 пачка",
+                        "price": "300 рублей"
+                    },
+                    {
+                        "name": "сосиски говяжьи",
+                        "quantity": "400 грамм",
+                        "price": "250 рублей"
+                    }
+                ],
+                "beverage": [
+                    {
+                        "name": "кока кола",
+                        "quantity": "None",
+                        "price": "500 рублей"
+                    }
+                ],
+                "dairy_product": [
+                    {
+                        "name": "кефир",
+                        "quantity": "1 литр",
+                        "price": "100 рублей"
+                    }
+                ],
+                "dessert": [
+                    {
+                        "name": "торт прага",
+                        "quantity": "None",
+                        "price": "700 рублей"
+                    }
+                ],
+                "fruit_and_vegi": [
+                    {
+                        "name": "розы",
+                        "quantity": "None",
+                        "price": "1000 рублей"
+                    }
+                ],
+                "hygiene": [],
+                "household_chem": [],
+                "gift": [],
+                "fish_product": [],
+                "other": [],
+                "total_price": "2850 рублей"
+            }
+        }
+    ]
+}
