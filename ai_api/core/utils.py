@@ -1,26 +1,21 @@
 import json
-import os
 from datetime import datetime
+TEMP_DATA_FILE = "temp_data.json"
+
+def write_temp_data(user_id: int, text: str):
+    try:
+        with open(TEMP_DATA_FILE, "r") as file:
+            data = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        data = {}
 
 
-def read_data(file_path='data.json'):
-    if not os.path.exists(file_path):
-        return {}
-    with open(file_path, 'r', encoding='utf-8') as file:
-        data = json.load(file)
-    return data
+    timestamp = datetime.now().isoformat()
 
+    data[user_id] = {
+        "text": text,
+        "timestamp": timestamp
+    }
 
-def write_data(user_id, data_to_save, file_path='data.json'):
-    data = read_data(file_path)
-
-    if str(user_id) not in data:
-        data[str(user_id)] = []
-
-    data[str(user_id)].append({
-        "timestamp": datetime.now().isoformat(),
-        "data": data_to_save
-    })
-
-    with open(file_path, 'w', encoding='utf-8') as file:
-        json.dump(data, file, ensure_ascii=False, indent=4)
+    with open(TEMP_DATA_FILE, "w") as file:
+        json.dump(data, file, indent=4)
