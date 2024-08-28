@@ -11,7 +11,7 @@ API_KEY = api_header_token
 api_key_header = APIKeyHeader(name="Authorization")
 
 TEMP_DATA_FILE = "temp_data.json"
-
+DB_DATA_FILE = "db_data.json"
 
 def check_bearer_token(api_key_header: str = Security(api_key_header)):
     if api_key_header != f"Bearer {API_KEY}":
@@ -19,7 +19,33 @@ def check_bearer_token(api_key_header: str = Security(api_key_header)):
     return api_key_header
 
 
+def save_to_db(user_id: int, analyzed_data: dict):
+    try:
+        with open(DB_DATA_FILE, "r", encoding='utf-8') as file:
+            all_data = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        all_data = {}
+
+    # Извлекаем таймстамп из временного хранилища
+    temp_data = read_temp_data(user_id)
+    timestamp = temp_data['timestamp']
+
+    if str(user_id) in all_data:
+        all_data[str(user_id)].append({"data": analyzed_data, "timestamp": timestamp})
+    else:
+        all_data[str(user_id)] = [{"data": analyzed_data, "timestamp": timestamp}]
+
+    with open("db_data.json", "w") as file:
+        json.dump(all_data, file, indent=4)
+
+
 def write_temp_data(user_id: int, text: str):
+    '''
+    write temporal data after audio recognizion
+    :param user_id:
+    :param text:
+    :return:
+    '''
     try:
         with open(TEMP_DATA_FILE, "r") as file:
             data = json.load(file)
@@ -38,6 +64,11 @@ def write_temp_data(user_id: int, text: str):
 
 
 def read_temp_data(user_id: int):
+    """
+    read temporal data after audio recognizion
+    :param user_id:
+    :return:
+    """
     try:
         with open(TEMP_DATA_FILE, "r") as file:
             data = json.load(file)
@@ -45,3 +76,22 @@ def read_temp_data(user_id: int):
         return None
 
     return data.get(str(user_id), None)
+
+
+def delete_temp_data(user_id: int):
+    """
+    delete temporal data after audio recognizion
+    :param user_id:
+    :return:
+    """
+    try:
+        with open(TEMP_DATA_FILE, "r") as file:
+            data = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return
+
+    if str(user_id) in data:
+        del data[str(user_id)]
+
+    with open(TEMP_DATA_FILE, "w") as file:
+        json.dump(data, file, indent=4)

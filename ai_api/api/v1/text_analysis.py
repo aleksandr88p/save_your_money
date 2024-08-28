@@ -114,6 +114,3 @@ def analyze_text(text: str) -> dict:
     output_dict = output_parser.parse(response.content)
     return output_dict
 
-#
-#
-# analyze_text(example_text2)

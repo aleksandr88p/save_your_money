@@ -1,12 +1,31 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Security
 from ai_api.api.v1.whisper_service import transcribe_audio
-from ai_api.core.utils import write_temp_data, read_temp_data, check_bearer_token
+from ai_api.core.utils import check_bearer_token, read_temp_data, delete_temp_data, save_to_db, write_temp_data
+
+from ai_api.api.v1.text_analysis import analyze_text
 import os
 
 router = APIRouter()
 
+
+@router.post("/confirm-text/")
+async def confirm_text(user_id: int, confirmation: bool, token: str = Security(check_bearer_token)):
+    temp_data = read_temp_data(user_id)
+
+    if not temp_data:
+        raise HTTPException(status_code=404, detail="No temporary data found for the user.")
+
+    if confirmation:
+        analyzed_data = analyze_text(temp_data["text"])
+        save_to_db(user_id, analyzed_data)  # Сохраняем данные в постоянное хранилище
+        delete_temp_data(user_id)  # Удаляем временные данные
+        return {"status": "success", "analyzed_data": analyzed_data}
+    else:
+        delete_temp_data(user_id)  # Удаляем временные данные
+        return {"status": "failure", "message": "Session ended, data not confirmed."}
+
 @router.post("/audio-to-text/")
-async def audio_to_text(user_id: int, file: UploadFile = File(...)):
+async def audio_to_text(user_id: int, file: UploadFile = File(...), token: str = Security(check_bearer_token)):
     try:
         # Сохранение файла временно
         file_location = f"temp_audio/{file.filename}"
@@ -34,7 +53,7 @@ async def audio_to_text(user_id: int, file: UploadFile = File(...)):
 
 
 @router.get("/get-temp-text/")
-async def get_temp_text(user_id: int, token: str = Depends(check_bearer_token)):
+async def get_temp_text(user_id: int, token: str = Security(check_bearer_token)):
     temp_data = read_temp_data(user_id)
 
     if not temp_data:
@@ -42,28 +61,3 @@ async def get_temp_text(user_id: int, token: str = Depends(check_bearer_token)):
 
     return {"user_id": user_id, "text": temp_data["text"], "timestamp": temp_data["timestamp"]}
 
-# @router.post("/audio-to-text/")
-# async def audio_to_text(file: UploadFile = File(...)):
-#     try:
-#         file_location = f"temp_audio/{file.filename}"
-#         with open(file_location, "wb") as buffer:
-#             buffer.write(await file.read())
-#
-#         recognized_text = transcribe_audio(file_location)
-#
-#         return {
-#             "filename": file.filename,
-#             "recognized_text": recognized_text,
-#             "confirmation_required": True
-#         }
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Ошибка при обработке аудио: {str(e)}")
-#
-# @router.post("/confirm-text/")
-# async def confirm_text(user_id: int, confirmation: bool, text: str):
-#     if confirmation:
-#         analyzed_data = analyze_text(text)
-#         write_data(user_id, analyzed_data)  # Сохраняем данные в JSON-файл
-#         return {"status": "success", "analyzed_data": analyzed_data}
-#     else:
-#         return {"status": "failure", "message": "Please correct the text manually."}
