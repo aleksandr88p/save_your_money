@@ -19,24 +19,25 @@ def check_bearer_token(api_key_header: str = Security(api_key_header)):
     return api_key_header
 
 
-def save_to_db(user_id: int, analyzed_data: dict):
+def save_to_db(user_id: int, analyzed_data: dict, timestamp=None):
     try:
         with open(DB_DATA_FILE, "r", encoding='utf-8') as file:
             all_data = json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
         all_data = {}
 
-    # Извлекаем таймстамп из временного хранилища
-    temp_data = read_temp_data(user_id)
-    timestamp = temp_data['timestamp']
+    if not timestamp:
+        # Извлекаем таймстамп из временного хранилища
+        temp_data = read_temp_data(user_id)
+        timestamp = temp_data['timestamp']
 
     if str(user_id) in all_data:
         all_data[str(user_id)].append({"data": analyzed_data, "timestamp": timestamp})
     else:
         all_data[str(user_id)] = [{"data": analyzed_data, "timestamp": timestamp}]
 
-    with open("db_data.json", "w") as file:
-        json.dump(all_data, file, indent=4)
+    with open("db_data.json", "w", encoding='utf-8') as file:
+        json.dump(all_data, file, indent=4, ensure_ascii=False)
 
 
 def write_temp_data(user_id: int, text: str):

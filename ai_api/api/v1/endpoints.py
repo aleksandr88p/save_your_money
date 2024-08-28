@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Security
 from ai_api.api.v1.whisper_service import transcribe_audio
 from ai_api.core.utils import check_bearer_token, read_temp_data, delete_temp_data, save_to_db, write_temp_data
-
+from datetime import datetime
 from ai_api.api.v1.text_analysis import analyze_text
 import os
 
@@ -60,4 +60,19 @@ async def get_temp_text(user_id: int, token: str = Security(check_bearer_token))
         raise HTTPException(status_code=404, detail="No temporary data found for this user.")
 
     return {"user_id": user_id, "text": temp_data["text"], "timestamp": temp_data["timestamp"]}
+
+
+
+@router.post("/submit-text/")
+async def submit_text(user_id: int, text: str, api_key: str = Depends(check_bearer_token)):
+    # Анализируем текст
+    analyzed_data = analyze_text(text)
+
+    # Сохраняем результат анализа в постоянное хранилище
+    timestamp = datetime.now().isoformat()
+    save_to_db(user_id, analyzed_data, timestamp)
+
+    # Возвращаем результат анализа пользователю для проверки
+    return {"status": "success", "analyzed_data": analyzed_data}
+
 

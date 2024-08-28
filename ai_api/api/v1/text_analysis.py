@@ -16,7 +16,7 @@ llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.0)
 
 meat_schema = ResponseSchema(
     name="meat",
-    description="List of meat products with name, quantity, and price",
+    description="List of meat products(all type of meat products) with name, quantity, and price",
     type="Dict",
 )
 
