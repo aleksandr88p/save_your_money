@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from ai_api.api.v1.whisper_service import transcribe_audio
-from ai_api.core.utils import write_temp_data
+from ai_api.core.utils import write_temp_data, read_temp_data, check_bearer_token
 import os
 
 router = APIRouter()
@@ -29,8 +29,18 @@ async def audio_to_text(user_id: int, file: UploadFile = File(...)):
     finally:
         try:
             os.remove(file_location)  # Удаление временного файла после обработки
-        except Exception:
-            print('file deleted')
+        except Exception as e:
+            print('file deleted\n{}'.format(e))
+
+
+@router.get("/get-temp-text/")
+async def get_temp_text(user_id: int, token: str = Depends(check_bearer_token)):
+    temp_data = read_temp_data(user_id)
+
+    if not temp_data:
+        raise HTTPException(status_code=404, detail="No temporary data found for this user.")
+
+    return {"user_id": user_id, "text": temp_data["text"], "timestamp": temp_data["timestamp"]}
 
 # @router.post("/audio-to-text/")
 # async def audio_to_text(file: UploadFile = File(...)):
