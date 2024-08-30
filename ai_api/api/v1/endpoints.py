@@ -2,6 +2,8 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Securit
 from ai_api.api.v1.whisper_service import transcribe_audio
 from ai_api.core.utils import check_bearer_token, read_temp_data, delete_temp_data, save_to_db, write_temp_data
 from datetime import datetime
+from sqlalchemy.orm import Session
+from ai_api.core.db import get_db
 from ai_api.api.v1.text_analysis import analyze_text
 import os
 
@@ -9,20 +11,27 @@ router = APIRouter()
 
 
 @router.post("/confirm-text/")
-async def confirm_text(user_id: int, confirmation: bool, token: str = Security(check_bearer_token)):
-    temp_data = read_temp_data(user_id)
-
-    if not temp_data:
-        raise HTTPException(status_code=404, detail="No temporary data found for the user.")
-
+async def confirm_text(user_id: int, confirmation: bool, api_key: str = Depends(check_bearer_token),
+                       db: Session = Depends(get_db)):
     if confirmation:
+        # Извлекаем текст из временного хранилища
+        temp_data = read_temp_data(user_id)
+        if not temp_data:
+            raise HTTPException(status_code=404, detail="No temporary data found for this user.")
+
         analyzed_data = analyze_text(temp_data["text"])
-        save_to_db(user_id, analyzed_data)  # Сохраняем данные в постоянное хранилище
-        delete_temp_data(user_id)  # Удаляем временные данные
+
+        # Сохраняем данные в базе данных
+        save_to_db(db, user_id, analyzed_data, temp_data["timestamp"])
+
+        # Удаляем временные данные
+        delete_temp_data(user_id)
+
         return {"status": "success", "analyzed_data": analyzed_data}
     else:
-        delete_temp_data(user_id)  # Удаляем временные данные
-        return {"status": "failure", "message": "Session ended, data not confirmed."}
+        # Удаляем временные данные при отказе
+        delete_temp_data(user_id)
+        return {"status": "failure", "message": "Please correct the text manually."}
 
 @router.post("/audio-to-text/")
 async def audio_to_text(user_id: int, file: UploadFile = File(...), token: str = Security(check_bearer_token)):
@@ -64,15 +73,43 @@ async def get_temp_text(user_id: int, token: str = Security(check_bearer_token))
 
 
 @router.post("/submit-text/")
-async def submit_text(user_id: int, text: str, api_key: str = Depends(check_bearer_token)):
+async def submit_text(user_id: int, text: str, api_key: str = Depends(check_bearer_token), db: Session = Depends(get_db)):
     # Анализируем текст
     analyzed_data = analyze_text(text)
 
     # Сохраняем результат анализа в постоянное хранилище
     timestamp = datetime.now().isoformat()
-    save_to_db(user_id, analyzed_data, timestamp)
+    save_to_db(db, user_id, analyzed_data, timestamp)
 
     # Возвращаем результат анализа пользователю для проверки
     return {"status": "success", "analyzed_data": analyzed_data}
 
 
+
+
+# @router.post("/submit-text/")
+# async def submit_text(user_id: int, text: str, api_key: str = Depends(check_bearer_token)):
+#     # Анализируем текст
+#     analyzed_data = analyze_text(text)
+#
+#     # Сохраняем результат анализа в постоянное хранилище
+#     timestamp = datetime.now().isoformat()
+#     save_to_db(user_id, analyzed_data, timestamp)
+#
+#     # Возвращаем результат анализа пользователю для проверки
+#     return {"status": "success", "analyzed_data": analyzed_data}
+# @router.post("/confirm-text/")
+# async def confirm_text(user_id: int, confirmation: bool, token: str = Security(check_bearer_token)):
+#     temp_data = read_temp_data(user_id)
+#
+#     if not temp_data:
+#         raise HTTPException(status_code=404, detail="No temporary data found for the user.")
+#
+#     if confirmation:
+#         analyzed_data = analyze_text(temp_data["text"])
+#         save_to_db(user_id, analyzed_data)  # Сохраняем данные в постоянное хранилище
+#         delete_temp_data(user_id)  # Удаляем временные данные
+#         return {"status": "success", "analyzed_data": analyzed_data}
+#     else:
+#         delete_temp_data(user_id)  # Удаляем временные данные
+#         return {"status": "failure", "message": "Session ended, data not confirmed."}
