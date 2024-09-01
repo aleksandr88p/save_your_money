@@ -10,6 +10,23 @@ import os
 router = APIRouter()
 
 
+@router.post("/query-expenses/")
+async def query_expenses(user_id: int, query: str, api_key: str = Depends(check_bearer_token),
+                         db: Session = Depends(get_db)):
+    """
+    Эндпоинт для анализа трат пользователя.
+
+    :param user_id: Идентификатор пользователя (например, ID в Telegram).
+    :param query: Текстовый запрос от пользователя (например, "Сколько я потратил на молоко в прошлом месяце?").
+    :param api_key: Bearer-токен для авторизации.
+    :param db: Сессия базы данных.
+    :return: Результат анализа трат.
+    """
+    # Здесь будет логика анализа запроса и выполнения соответствующего SQL-запроса
+
+    # Для примера: просто возвращаем то, что получил эндпоинт
+    return {"user_id": user_id, "query": query, "result": "Здесь будет результат анализа запроса"}
+
 @router.post("/confirm-text/")
 async def confirm_text(user_id: int, confirmation: bool, api_key: str = Depends(check_bearer_token),
                        db: Session = Depends(get_db)):
