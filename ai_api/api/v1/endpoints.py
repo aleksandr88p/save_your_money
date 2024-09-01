@@ -5,27 +5,24 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from ai_api.core.db import get_db
 from ai_api.api.v1.text_analysis import analyze_text
+from ai_api.api.v1.sql_agent import analyze_expense_query
+
 import os
 
 router = APIRouter()
 
 
 @router.post("/query-expenses/")
-async def query_expenses(user_id: int, query: str, api_key: str = Depends(check_bearer_token),
-                         db: Session = Depends(get_db)):
-    """
-    Эндпоинт для анализа трат пользователя.
+async def query_expenses(user_telegram_id: str, query: str, api_key: str = Depends(check_bearer_token), db: Session = Depends(get_db)):
+    print(user_telegram_id)
+    response = await analyze_expense_query(user_telegram_id, query, db)
 
-    :param user_id: Идентификатор пользователя (например, ID в Telegram).
-    :param query: Текстовый запрос от пользователя (например, "Сколько я потратил на молоко в прошлом месяце?").
-    :param api_key: Bearer-токен для авторизации.
-    :param db: Сессия базы данных.
-    :return: Результат анализа трат.
-    """
-    # Здесь будет логика анализа запроса и выполнения соответствующего SQL-запроса
+    if "error" in response:
+        raise HTTPException(status_code=404, detail=response["error"])
 
-    # Для примера: просто возвращаем то, что получил эндпоинт
-    return {"user_id": user_id, "query": query, "result": "Здесь будет результат анализа запроса"}
+    return {"status": "success", "response": response}
+
+
 
 @router.post("/confirm-text/")
 async def confirm_text(user_id: int, confirmation: bool, api_key: str = Depends(check_bearer_token),

@@ -1,3 +1,5 @@
+from traceback import print_tb
+
 from langchain_community.utilities import SQLDatabase
 from langchain_community.llms import OpenAI
 from sqlalchemy import create_engine
@@ -35,6 +37,7 @@ llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.0)
 toolkit = SQLDatabaseToolkit(db=db, llm=llm)
 
 async def analyze_expense_query(user_telegram_id: str, user_query: str, db_session: Session) -> dict:
+    print(user_telegram_id, user_query)
     user = db_session.query(User).filter(User.telegram_id == user_telegram_id).first()
 
     if not user:
