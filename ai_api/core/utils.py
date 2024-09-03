@@ -13,7 +13,7 @@ API_KEY = api_header_token
 api_key_header = APIKeyHeader(name="Authorization")
 
 TEMP_DATA_FILE = "temp_data.json"
-DB_DATA_FILE = "db_data.json"
+# DB_DATA_FILE = "db_data.json"
 
 def check_bearer_token(api_key_header: str = Security(api_key_header)):
     if api_key_header != f"Bearer {API_KEY}":
