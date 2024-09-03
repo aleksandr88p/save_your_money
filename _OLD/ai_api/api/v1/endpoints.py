@@ -101,3 +101,29 @@ async def submit_text(user_id: int, text: str, api_key: str = Depends(check_bear
 
 
 
+# @router.post("/submit-text/")
+# async def submit_text(user_id: int, text: str, api_key: str = Depends(check_bearer_token)):
+#     # Анализируем текст
+#     analyzed_data = analyze_text(text)
+#
+#     # Сохраняем результат анализа в постоянное хранилище
+#     timestamp = datetime.now().isoformat()
+#     save_to_db(user_id, analyzed_data, timestamp)
+#
+#     # Возвращаем результат анализа пользователю для проверки
+#     return {"status": "success", "analyzed_data": analyzed_data}
+# @router.post("/confirm-text/")
+# async def confirm_text(user_id: int, confirmation: bool, token: str = Security(check_bearer_token)):
+#     temp_data = read_temp_data(user_id)
+#
+#     if not temp_data:
+#         raise HTTPException(status_code=404, detail="No temporary data found for the user.")
+#
+#     if confirmation:
+#         analyzed_data = analyze_text(temp_data["text"])
+#         save_to_db(user_id, analyzed_data)  # Сохраняем данные в постоянное хранилище
+#         delete_temp_data(user_id)  # Удаляем временные данные
+#         return {"status": "success", "analyzed_data": analyzed_data}
+#     else:
+#         delete_temp_data(user_id)  # Удаляем временные данные
+#         return {"status": "failure", "message": "Session ended, data not confirmed."}

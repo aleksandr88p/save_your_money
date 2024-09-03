@@ -1,27 +1,27 @@
-# utils.py
-
 import json
 from datetime import datetime
+import os
+from dotenv import load_dotenv
 from fastapi import HTTPException, Security
 from fastapi.security.api_key import APIKeyHeader
 from ai_api.models.models import Purchase, Transaction, User
 from sqlalchemy.orm import Session
-from ai_api.config import config  # Подключаем конфигурацию
 
+load_dotenv()
+api_header_token = os.getenv('api_header_token')
+API_KEY = api_header_token
 api_key_header = APIKeyHeader(name="Authorization")
 
+TEMP_DATA_FILE = "temp_data.json"
+# DB_DATA_FILE = "db_data.json"
+
 def check_bearer_token(api_key_header: str = Security(api_key_header)):
-    """
-    Проверяет токен API на соответствие.
-    """
-    if api_key_header != f"Bearer {config.API_HEADER_TOKEN}":
+    if api_key_header != f"Bearer {API_KEY}":
         raise HTTPException(status_code=403, detail="Could not validate credentials")
     return api_key_header
 
+
 def save_to_db(db: Session, user_id: int, analyzed_data: dict, timestamp=None):
-    """
-    Сохраняет проанализированные данные о покупках и транзакциях в базу данных.
-    """
     # Проверка, существует ли пользователь
     user = db.query(User).filter(User.telegram_id == str(user_id)).first()
     if not user:
@@ -106,11 +106,14 @@ def save_to_db(db: Session, user_id: int, analyzed_data: dict, timestamp=None):
 
 
 def write_temp_data(user_id: int, text: str):
-    """
-    Записывает временные данные после распознавания аудио.
-    """
+    '''
+    write temporal data after audio recognizion
+    :param user_id:
+    :param text:
+    :return:
+    '''
     try:
-        with open(config.TEMP_DATA_FILE, "r") as file:
+        with open(TEMP_DATA_FILE, "r") as file:
             data = json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
         data = {}
@@ -122,16 +125,18 @@ def write_temp_data(user_id: int, text: str):
         "timestamp": timestamp
     }
 
-    with open(config.TEMP_DATA_FILE, "w") as file:
+    with open(TEMP_DATA_FILE, "w") as file:
         json.dump(data, file, indent=4)
 
 
 def read_temp_data(user_id: int):
     """
-    Читает временные данные для пользователя.
+    read temporal data after audio recognizion
+    :param user_id:
+    :return:
     """
     try:
-        with open(config.TEMP_DATA_FILE, "r") as file:
+        with open(TEMP_DATA_FILE, "r") as file:
             data = json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
         return None
@@ -141,10 +146,12 @@ def read_temp_data(user_id: int):
 
 def delete_temp_data(user_id: int):
     """
-    Удаляет временные данные после подтверждения или отклонения.
+    delete temporal data after audio recognizion
+    :param user_id:
+    :return:
     """
     try:
-        with open(config.TEMP_DATA_FILE, "r") as file:
+        with open(TEMP_DATA_FILE, "r") as file:
             data = json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
         return
@@ -152,5 +159,31 @@ def delete_temp_data(user_id: int):
     if str(user_id) in data:
         del data[str(user_id)]
 
-    with open(config.TEMP_DATA_FILE, "w") as file:
+    with open(TEMP_DATA_FILE, "w") as file:
         json.dump(data, file, indent=4)
+
+
+
+
+
+
+# def save_to_db(user_id: int, analyzed_data: dict, timestamp=None):
+#     try:
+#         with open(DB_DATA_FILE, "r", encoding='utf-8') as file:
+#             all_data = json.load(file)
+#     except (FileNotFoundError, json.JSONDecodeError):
+#         all_data = {}
+#
+#     if not timestamp:
+#         # Извлекаем таймстамп из временного хранилища
+#         temp_data = read_temp_data(user_id)
+#         timestamp = temp_data['timestamp']
+#
+#     if str(user_id) in all_data:
+#         all_data[str(user_id)].append({"data": analyzed_data, "timestamp": timestamp})
+#     else:
+#         all_data[str(user_id)] = [{"data": analyzed_data, "timestamp": timestamp}]
+#
+#     with open("db_data.json", "w", encoding='utf-8') as file:
+#         json.dump(all_data, file, indent=4, ensure_ascii=False)
+

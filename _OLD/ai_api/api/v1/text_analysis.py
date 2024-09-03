@@ -1,12 +1,14 @@
 from langchain_openai import ChatOpenAI
+import os
+from dotenv import load_dotenv
 from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain.output_parsers import ResponseSchema
 from langchain.output_parsers import StructuredOutputParser
-from ai_api.config import config  # Подключаем конфигурацию
-import os
 
-# Настройка OpenAI через конфигурацию
-os.environ['OPENAI_API_KEY'] = config.OPEN_AI_TOKEN
+load_dotenv()
+
+OPEN_AI_TOKEN = os.getenv("OPEN_AI_TOKEN")
+os.environ['OPENAI_API_KEY'] = OPEN_AI_TOKEN
 
 llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.0)
 
