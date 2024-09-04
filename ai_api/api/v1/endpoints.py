@@ -46,14 +46,25 @@ async def confirm_text(user_id: int, confirmation: bool, api_key: str = Depends(
         # Удаляем временные данные при отказе
         delete_temp_data(user_id)
         return {"status": "failure", "message": "Please correct the text manually."}
-
+    
 @router.post("/audio-to-text/")
 async def audio_to_text(user_id: int, file: UploadFile = File(...), token: str = Security(check_bearer_token)):
     try:
+        # Проверка существования директории и её создание
+        if not os.path.exists('temp_audio'):
+            os.makedirs('temp_audio')
+        
+        # Логирование размера загружаемого файла
+        file_size = await file.read()
+        print(f"File size: {len(file_size)} bytes")
+        await file.seek(0)  # Возвращаем указатель чтения в начало файла
+        
         # Сохранение файла временно
         file_location = f"temp_audio/{file.filename}"
+        print(f"Saving file to: {file_location}")
+        
         with open(file_location, "wb") as buffer:
-            buffer.write(await file.read())
+            buffer.write(file_size)
 
         # Преобразование аудио в текст
         recognized_text = transcribe_audio(file_location)
@@ -67,12 +78,41 @@ async def audio_to_text(user_id: int, file: UploadFile = File(...), token: str =
             "confirmation_required": True
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error while processing audio")
+        raise HTTPException(status_code=500, detail=f"Error while processing audio: {str(e)}")
     finally:
         try:
-            os.remove(file_location)  # Удаление временного файла после обработки
+            # Удаление временного файла после обработки
+            os.remove(file_location)
+            print(f"File {file_location} deleted successfully.")
         except Exception as e:
-            print('file deleted\n{}'.format(e))
+            print(f"Failed to delete file: {e}")
+
+# @router.post("/audio-to-text/")
+# async def audio_to_text(user_id: int, file: UploadFile = File(...), token: str = Security(check_bearer_token)):
+#     try:
+#         # Сохранение файла временно
+#         file_location = f"temp_audio/{file.filename}"
+#         with open(file_location, "wb") as buffer:
+#             buffer.write(await file.read())
+
+#         # Преобразование аудио в текст
+#         recognized_text = transcribe_audio(file_location)
+
+#         # Сохранение текста во временное хранилище
+#         write_temp_data(user_id, recognized_text)
+
+#         return {
+#             "filename": file.filename,
+#             "recognized_text": recognized_text,
+#             "confirmation_required": True
+#         }
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error while processing audio")
+#     finally:
+#         try:
+#             os.remove(file_location)  # Удаление временного файла после обработки
+#         except Exception as e:
+#             print('file deleted\n{}'.format(e))
 
 
 @router.get("/get-temp-text/")
