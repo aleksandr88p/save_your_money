@@ -15,8 +15,8 @@ and libraries for processing requests, as well as a PostgreSQL database for stor
 #### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-repo.git
-cd your-repo
+git clone https://github.com/aleksandr88p/save_your_money.git
+cd save_your_money
 ```
 
 ### 2. Create a virtual environment and install dependencies
@@ -149,8 +149,8 @@ Expense Tracker API — это API для управления и отслежи
 ### 1. Клонирование репозитория
 
 ```bash
-git clone https://github.com/ваш-репозиторий.git
-cd ваш-репозиторий
+git clone https://github.com/aleksandr88p/save_your_money.git
+cd save_your_money
 ```
 
 ### 2. Создание виртуального окружения и установка зависимостей
